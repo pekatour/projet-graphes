@@ -1,5 +1,5 @@
 import networkx as nx
-from pandas import *
+from pandas import read_csv
 from matplotlib.pyplot import *
 from math import sqrt
 
@@ -23,7 +23,7 @@ def CSV2Graph(emplacement,poids,distance_communication=40000):
         for j in range(i + 1, len(csv)):
             pos_i = graphe.nodes[i]['pos']
             pos_j = graphe.nodes[j]['pos']
-            # print(distance_eucl(pos_i, pos_j) < distance_communication)
+
             if distance_eucl(pos_i, pos_j) < distance_communication:
                 graphe.add_edge(i, j, weight=poids(pos_i,pos_j))
 
@@ -112,10 +112,12 @@ def Partie3():
     for graphe_k in AllGraphs([60000],poids=carre_distance):
         data_i=[]
         for graphe in graphe_k:
-            data_i.append(CalculCaractéristiques(graphe,cout=lambda a,b,c : c["weight"]))
+            data_i.append(CalculCaractéristiques(graphe,cout=lambda noeud_a,noeud_b,dico_edge : dico_edge["weight"]))
         data.append(data_i)
     return data
 
-print(Partie3())
+### Main ###
 
-# print(CSV2Graph("csv/topology_low.csv",distance_eucl).edges())
+#Partie1()
+print(Partie2())
+print(Partie3())
