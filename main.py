@@ -29,7 +29,7 @@ def CSV2Graph(emplacement,poids,distance_communication=40000):
 
     return graphe
 
-def Graph2Plot(graphe):
+def Graph2Plot(graphe,avec_labels=True):
 
     pos = {node: (data['pos'][0], data['pos'][1], data['pos'][2]) for node, data in graphe.nodes(data=True)}
 
@@ -38,7 +38,8 @@ def Graph2Plot(graphe):
 
     for node, (x, y, z) in pos.items():
         troisDim.scatter(x, y, z, color='blue', s=30)
-        troisDim.text(x, y, z, s=str(node), fontsize=10)
+        if avec_labels:
+            troisDim.text(x, y, z, s=str(node), fontsize=10)
 
     for edge in graphe.edges():
         x = [pos[edge[0]][0], pos[edge[1]][0]]
@@ -46,7 +47,55 @@ def Graph2Plot(graphe):
         z = [pos[edge[0]][2], pos[edge[1]][2]]
         troisDim.plot(x, y, z, color='black', linewidth=1)
 
+    troisDim.grid(True)
+
+    troisDim.set_xticks([])
+    troisDim.set_yticks([])
+    troisDim.set_zticks([])
+
+def GraphsInSubplots(graphes, avec_labels=True):
+    """
+    Affiche les graphes donnés dans une grille 3x3 de subplots.
+    
+    graphes : liste de graphes à afficher.
+    avec_labels : booléen, indique s'il faut afficher les labels des noeuds.
+    """
+    # Déterminer la taille de la grille
+    n = len(graphes)
+    rows = cols = 3
+
+    fig, axes = subplots(rows, cols, subplot_kw={'projection': '3d'}, figsize=(15, 15))
+    axes = axes.flatten()
+
+    for i, graphe in enumerate(graphes):
+        pos = {node: (data['pos'][0], data['pos'][1], data['pos'][2]) for node, data in graphe.nodes(data=True)}
+
+        ax = axes[i] 
+
+        for node, (x, y, z) in pos.items():
+            ax.scatter(x, y, z, color='blue', s=30)
+            if avec_labels:
+                ax.text(x, y, z, s=str(node), fontsize=10)
+
+        for edge in graphe.edges():
+            x = [pos[edge[0]][0], pos[edge[1]][0]]
+            y = [pos[edge[0]][1], pos[edge[1]][1]]
+            z = [pos[edge[0]][2], pos[edge[1]][2]]
+            ax.plot(x, y, z, color='black', linewidth=1)
+
+        ax.grid(True)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_zticks([])
+
+        ax.set_title(f"Graphe {i+1}")
+
+    for j in range(n, len(axes)):
+        fig.delaxes(axes[j])
+
+    tight_layout()
     show()
+
 
 def AllGraphs(ranges = [20000,40000,60000],poids=distance_eucl):
     """
@@ -56,18 +105,17 @@ def AllGraphs(ranges = [20000,40000,60000],poids=distance_eucl):
     topologies = ["csv/topology_low.csv","csv/topology_avg.csv","csv/topology_high.csv"]
 
     graphes = []
-    for i in range(len(topologies)):
+    for i in range(len(ranges)):
         s_graphes = []
-        for j in range(len(ranges)):
+        for j in range(len(topologies)):
             s_graphes.append(CSV2Graph(topologies[i],poids,ranges[j]))
         graphes.append(s_graphes)
 
     return graphes
 
 def Partie1():
-    for graphe_k in AllGraphs():
-        for graphe in graphe_k:
-            Graph2Plot(graphe)
+    GraphsInSubplots([x[0] for x in AllGraphs()],False)
+            
 
 def CalculCaractéristiques(graphe,cout=None):
     """ 
@@ -93,7 +141,7 @@ def CalculCaractéristiques(graphe,cout=None):
     distribution_pcc = [length for dico_dist in pcc.values() for length in dico_dist.values()]
     len_distribution_pcc = len(distribution_pcc)
 
-    return moy_degres,distribution_degres,moy_clustering,distribution_clustering,nb_cliques,ordres_cliques,nb_composantes_connexes,ordres_composantes,pcc,distribution_pcc,len_distribution_pcc
+    return {"moy_degres":moy_degres,"distribution_degres":distribution_degres,"moy_clustering":moy_clustering,"distribution_clustering":distribution_clustering,"nb_cliques":nb_cliques,"ordres_cliques":ordres_cliques,"nb_composantes_connexes":nb_composantes_connexes,"ordres_composantes":ordres_composantes,"distribution_pcc":distribution_pcc,"len_distribution_pcc":len_distribution_pcc}
 
 def Partie2():
     data=[]
@@ -102,6 +150,7 @@ def Partie2():
         for graphe in graphe_k:
             data_i.append(CalculCaractéristiques(graphe))
         data.append(data_i)
+    
     return data
 
 def carre_distance(pos_i,pos_j):
@@ -116,8 +165,13 @@ def Partie3():
         data.append(data_i)
     return data
 
+
+
+
 ### Main ###
 
-#Partie1()
-print(Partie2())
-print(Partie3())
+Partie1()
+
+#print(Partie2())
+#print(Partie3())
+
