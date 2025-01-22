@@ -6,7 +6,10 @@ from math import sqrt
 def distance_eucl(point1, point2):
     return sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2 + (point1[2] - point2[2])**2)
 
-def CSV2Graph(emplacement,poids,distance_communication=40000):
+def carre_distance(pos_i,pos_j):
+    return distance_eucl(pos_i,pos_j)**2
+
+def CSV2Graph(emplacement,poids=distance_eucl,distance_communication=40000):
     """
         emplacement : string du fichier csv
         poids : fonction calculant le poids d'une arête, en fonction des deux extrémités
@@ -47,11 +50,7 @@ def Graph2Plot(graphe,avec_labels=True):
         z = [pos[edge[0]][2], pos[edge[1]][2]]
         troisDim.plot(x, y, z, color='black', linewidth=1)
 
-    troisDim.grid(True)
-
-    troisDim.set_xticks([])
-    troisDim.set_yticks([])
-    troisDim.set_zticks([])
+    
 
 def GraphsInSubplots(graphes, avec_labels=True):
     """
@@ -84,11 +83,9 @@ def GraphsInSubplots(graphes, avec_labels=True):
             ax.plot(x, y, z, color='black', linewidth=1)
 
         ax.grid(True)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_zticks([])
+        
 
-        ax.set_title(f"Graphe {i+1}")
+        ax.set_title(f"Graphe {i+1}")#
 
     for j in range(n, len(axes)):
         fig.delaxes(axes[j])
@@ -108,14 +105,16 @@ def AllGraphs(ranges = [20000,40000,60000],poids=distance_eucl):
     for i in range(len(ranges)):
         s_graphes = []
         for j in range(len(topologies)):
-            s_graphes.append(CSV2Graph(topologies[i],poids,ranges[j]))
+            s_graphes.append(CSV2Graph(topologies[j],poids,ranges[i]))
         graphes.append(s_graphes)
 
+    # En colonne la densité augmente
+    # En ligne la distance de communciation augmente
     return graphes
 
 def Partie1():
-    GraphsInSubplots([x[0] for x in AllGraphs()],False)
-            
+    ### Toutes les configurations
+    GraphsInSubplots([y for x in AllGraphs() for y in x],False)
 
 def CalculCaractéristiques(graphe,cout=None):
     """ 
@@ -141,7 +140,11 @@ def CalculCaractéristiques(graphe,cout=None):
     distribution_pcc = [length for dico_dist in pcc.values() for length in dico_dist.values()]
     len_distribution_pcc = len(distribution_pcc)
 
-    return {"moy_degres":moy_degres,"distribution_degres":distribution_degres,"moy_clustering":moy_clustering,"distribution_clustering":distribution_clustering,"nb_cliques":nb_cliques,"ordres_cliques":ordres_cliques,"nb_composantes_connexes":nb_composantes_connexes,"ordres_composantes":ordres_composantes,"distribution_pcc":distribution_pcc,"len_distribution_pcc":len_distribution_pcc}
+    return {"moy_degres":moy_degres,"distribution_degres":distribution_degres,
+            "moy_clustering":moy_clustering,"distribution_clustering":distribution_clustering,
+            "nb_cliques":nb_cliques,"ordres_cliques":ordres_cliques,
+            "nb_composantes_connexes":nb_composantes_connexes,"ordres_composantes":ordres_composantes,
+            "distribution_pcc":distribution_pcc,"len_distribution_pcc":len_distribution_pcc}
 
 def Partie2():
     data=[]
@@ -153,9 +156,6 @@ def Partie2():
     
     return data
 
-def carre_distance(pos_i,pos_j):
-    return distance_eucl(pos_i,pos_j)**2
-
 def Partie3():
     data=[]
     for graphe_k in AllGraphs([60000],poids=carre_distance):
@@ -165,13 +165,118 @@ def Partie3():
         data.append(data_i)
     return data
 
+def plotDistribDeg(graphe,cout = None):
 
+    cle = "distribution_degres"
+    
+    fig, ax = subplots(1, 3, sharex=True, sharey=True, tight_layout=True)
+    fig.set_size_inches(8,2, forward= True)
+    
+    graph = CSV2Graph(graphe,distance_communication=20000)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[0].title.set_text("20 km")
+    ax[0].hist(dico[cle], bins= "auto")
 
+    graph = CSV2Graph(graphe,distance_communication=40000)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[1].title.set_text("40 km")
+    ax[1].hist(dico[cle], bins= "auto")
+
+    graph = CSV2Graph(graphe,distance_communication=60000)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[2].title.set_text("60 km")
+    ax[2].hist(dico[cle], bins= "auto")
+
+    show()
+
+def plotClustering(graphe,cout = None):
+
+    cle = "distribution_clustering"
+    
+    fig, ax = subplots(1, 3, sharex=True, sharey=True, tight_layout=True)
+    fig.set_size_inches(8,2, forward= True)
+
+    graph = CSV2Graph(graphe,distance_communication=20000)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[0].title.set_text("20 km")
+    ax[0].hist(dico[cle].values())
+
+    graph = CSV2Graph(graphe,distance_communication=40000)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[1].title.set_text("40 km")
+    ax[1].hist(dico[cle].values())
+
+    graph = CSV2Graph(graphe,distance_communication=60000)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[2].title.set_text("60 km")
+    ax[2].hist(dico[cle].values())
+
+    show()
+
+def Moyennes():
+    data = Partie2()
+    moy_deg = [[x["moy_degres"] for x in lst] for lst in data]
+    moy_clu = [[x["moy_clustering"] for x in lst] for lst in data]
+    return moy_deg, moy_clu
+
+def nbCliques_CompConnexes():
+    data = Partie2()
+    nbCliques = [[x["nb_cliques"] for x in lst] for lst in data]
+    nbConnexes = [[x["nb_composantes_connexes"] for x in lst] for lst in data]
+    return nbCliques,nbConnexes
+
+def plotOrdresCliques_CompConnexes():
+    data = Partie2()
+    ordres_cliques = [[x["ordres_cliques"] for x in lst] for lst in data]
+    moy = [[sum(x)/len(x) for x in lst] for lst in ordres_cliques]
+
+    fig, ax = subplots(3,3, sharex=True, sharey=True,tight_layout = True)
+    for i in range(3):
+        for j in range(3) :
+            print(ordres_cliques[i][j])
+            ax[i][j].hist(ordres_cliques[i][j], bins= "auto")
+    print(moy)
+    show()
+
+def plotPcc(graphe,cout=None,poids=distance_eucl):
+    
+    cle = "distribution_pcc"
+    
+    fig, ax = subplots(1, 3, sharex=True, sharey=True, tight_layout=True)
+    fig.set_size_inches(8,2, forward= True)
+
+    graph = CSV2Graph(graphe,distance_communication=20000,poids=poids)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[0].title.set_text("20 km - nb pcc = " + str(len(dico[cle])))
+    ax[0].hist(dico[cle], bins= "auto")
+
+    graph = CSV2Graph(graphe,distance_communication=40000,poids=poids)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[1].title.set_text("40 km - nb pcc = " + str(len(dico[cle])))
+    ax[1].hist(dico[cle], bins= "auto")
+
+    graph = CSV2Graph(graphe,distance_communication=60000,poids=poids)
+    dico = CalculCaractéristiques(graph,cout)
+    ax[2].title.set_text("60 km - nb pcc = " + str(len(dico[cle])))
+    ax[2].hist(dico[cle], bins= "auto")
+
+    show()
 
 ### Main ###
 
-Partie1()
+## Partie 1
+# Partie1()
 
-#print(Partie2())
-#print(Partie3())
+## Partie 2
+# Partie2()
+# plotDistribDeg("csv/topology_avg.csv")
+# plotClustering("csv/topology_low.csv")
+# print(Moyennes())
+# print(nbCliques_CompConnexes())
+# plotOrdresCliques_CompConnexes()
+# plotPcc("csv/topology_high.c
+# sv")
+
+## Partie 3
+#plotPcc("csv/topology_high.csv",lambda noeud_a,noeud_b,dico_edge : dico_edge["weight"],carre_distance)
 
