@@ -225,7 +225,7 @@ def nbCliques_CompConnexes():
     nbConnexes = [[x["nb_composantes_connexes"] for x in lst] for lst in data]
     return nbCliques,nbConnexes
 
-def plotOrdresCliques_CompConnexes():
+def plotOrdresCliques():
     data = Partie2()
     ordres_cliques = [[x["ordres_cliques"] for x in lst] for lst in data]
     moy = [[sum(x)/len(x) for x in lst] for lst in ordres_cliques]
@@ -235,7 +235,6 @@ def plotOrdresCliques_CompConnexes():
         for j in range(3) :
             print(ordres_cliques[i][j])
             ax[i][j].hist(ordres_cliques[i][j], bins= "auto")
-    print(moy)
     show()
 
 def plotPcc(graphe,cout=None,poids=distance_eucl):
@@ -273,10 +272,9 @@ def plotPcc(graphe,cout=None,poids=distance_eucl):
 # plotClustering("csv/topology_low.csv")
 # print(Moyennes())
 # print(nbCliques_CompConnexes())
-# plotOrdresCliques_CompConnexes()
-# plotPcc("csv/topology_high.c
-# sv")
+# plotOrdresCliques()
+# plotPcc("csv/topology_high.csv")
 
 ## Partie 3
-#plotPcc("csv/topology_high.csv",lambda noeud_a,noeud_b,dico_edge : dico_edge["weight"],carre_distance)
+# plotPcc("csv/topology_high.csv",lambda noeud_a,noeud_b,dico_edge : dico_edge["weight"],carre_distance)
 
